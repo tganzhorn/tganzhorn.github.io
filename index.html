@@ -16,15 +16,6 @@
       .content {
         padding: 0px 10px 10px 10px;
       }
-      a:visited {
-        color:white;
-      }
-      a:active {
-        color: white;
-      }
-      a {
-        color: white;
-      }
     </style>
     <style>
 
@@ -54,7 +45,7 @@
         <table>
           <tr>
             <td>
-              <span>Messdauer</span>
+              <span>Messdauer in s</span>
             </td>
             <td>
               <form action="#">
@@ -66,7 +57,7 @@
           </tr>
           <tr>
             <td>
-              <span>Messverzögerung</span>
+              <span>Messverzögerung in s</span>
             </td>
             <td>
               <form action="#">
@@ -79,7 +70,7 @@
         </table>
         <table>
           <tr>
-            <td><button class="btn blue darken-3 btn-large waves-effect waves-light" onclick="toggleMeasurement()">Messung</button></td>
+            <td><button class="btn blue darken-3 btn-large waves-effect waves-light" style="padding-left: 42px; padding-right: 42px;" onclick="toggleMeasurement()">Messung</button></td>
             <td>
               <div id="measurement-preloader" class = "preloader-wrapper small">
                 <div class = "spinner-layer spinner-blue-only">
@@ -96,6 +87,8 @@
               </div>
             </td>
           </tr>
+        </table>
+        <table>
           <tr>
             <td><button class="btn blue darken-3 btn-large waves-effect waves-light" onclick="analyseData()">Auswertung</button></td>
             <td>
@@ -108,13 +101,27 @@
           </tr>
           <tr>
             <td colspan="2">
-              <button class="btn blue darken-3 btn-large waves-effect waves-light" style="width: 100%" onclick="saveMeasurements()"><a id="download">Messdaten herunterladen</a></button>
+              <a class="btn blue darken-3 btn-large waves-effect waves-light" style="width: 100%" onclick="saveMeasurements()" id="download">
+                Messdaten herunterladen<i class="material-icons right">file_download</i>
+              </a>
             </td>
           </tr>
         </table>
       </div>
-      <div class="content" style="height: 400px">
+      <div class="content" style="padding-bottom: 20px; padding-top: 10px;">
         <canvas id="chart"></canvas>
+      </div>
+      <div class="page-footer blue darken-3 z-depth-2">
+        <div class="container">
+          <div class="row">
+            Falls Sie Fragen zu der Bedienung dieser App haben, können Sie mir Fragen an <a href="mailto:tganzhorn@gmail.com" class="light-blue-text">tganzhorn@gmail.com</a> senden.
+          </div>
+        </div>
+        <div class="footer-copyright">
+          <div class="container">
+            © 2019 Tobias Ganzhorn
+          </div>
+        </div>
       </div>
     </div>
     <script>
