@@ -5,6 +5,7 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="stylesheets/materialize.min.css"  media="screen,projection"/>
+    <script type="text/javascript" src="javascripts/Chart.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <style>
       h5 {
@@ -48,7 +49,7 @@
   </head>
   <body>
     <div class="wrapper">
-      <h5 class="blue darken-3" style="margin: 0">Trägheitsmoment Messung</h5>
+      <h5 class="blue darken-3 z-depth-2" style="margin: 0; margin-bottom: 5px;">Trägheitsmoment Messung</h5>
       <div class="content">
         <table>
           <tr>
@@ -111,6 +112,9 @@
             </td>
           </tr>
         </table>
+      </div>
+      <div class="content" style="height: 400px">
+        <canvas id="chart"></canvas>
       </div>
     </div>
     <script>
@@ -185,12 +189,14 @@
               enableMeasurement = true;
               date = new Date();
               saveMeasurements();
+              writeDataToChart();
             }, document.getElementById("delay").value * 1000);
 
             setTimeout(function() {
               enableMeasurement = false;
               document.getElementById("measurement-preloader").className = "preloader-wrapper small";
               saveMeasurements();
+              writeDataToChart();
             }, document.getElementById("duration").value * 1000 + document.getElementById("delay").value * 1000);
 
             document.getElementById("measurement-preloader").className = "preloader-wrapper small active";
@@ -255,8 +261,70 @@
           document.getElementById("T").value = Math.round(deltaT * 1000) / 1000 + " s";
         }
 
+        function writeDataToChart() {
+          for(let i = 0; i < 6; i++) {
+            chart.data.datasets[i].data = [];
+          }
+
+          for(let i = 0; i < data.gyroscope.x.length; i++) {
+            chart.data.datasets[0].data.push({x: data.gyroscope.t[i], y:data.gyroscope.x[i]});
+            chart.data.datasets[1].data.push({x: data.gyroscope.t[i], y:data.gyroscope.y[i]});
+            chart.data.datasets[2].data.push({x: data.gyroscope.t[i], y:data.gyroscope.z[i]});
+            chart.data.datasets[3].data.push({x: data.accelerometer.t[i], y:data.accelerometer.x[i]});
+            chart.data.datasets[4].data.push({x: data.accelerometer.t[i], y:data.accelerometer.y[i]});
+            chart.data.datasets[5].data.push({x: data.accelerometer.t[i], y:data.accelerometer.z[i]});
+          }
+
+          chart.update();
+        }
+
         initSensors();
       </script>
+    <script>
+      let ctx = document.getElementById('chart').getContext('2d');
+
+      var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: 'Gx',
+            data: [],
+            borderColor: '#0B3954'
+          }, {
+            label: 'Gy',
+            data: [],
+            borderColor: '#087E8B'
+          }, {
+            label: 'Gz',
+            data: [],
+            borderColor: '#BFD7EA'
+          }, {
+            label: 'Ax',
+            data: [],
+            borderColor: '#E87B53'
+          }, {
+            label: 'Ay',
+            data: [],
+            borderColor: '#C81D25'
+          }, {
+            label: 'Az',
+            data: [],
+            borderColor: '#729B79'
+          }]
+        },
+        options: {
+          elements: {
+            point: {radius: 2}
+          },
+          scales: {
+            xAxes: [{
+              type: 'linear',
+              position: 'bottom'
+            }]
+          }
+        }
+      })
+    </script>
     <script type="text/javascript" src="javascripts/materialize.min.js"></script>
   </body>
 </html>
