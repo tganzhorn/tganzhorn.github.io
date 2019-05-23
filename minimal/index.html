@@ -115,7 +115,7 @@
                         return 0;
                     }
 
-                    let J = J1 * ((T2 * T2 - T1 * T1) / (T1 * T1 - T0 * T0));
+                    let J = J1 * ((T2 * T2 - T0 * T0) / (T1 * T1 - T0 * T0));
 
                     $('#jx').val(Math.round(J * 10000) / 10000);
                 },
