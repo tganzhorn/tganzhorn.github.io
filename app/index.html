@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Trägheitsmoment</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="stylesheets/materialize.min.css"  media="screen,projection"/>
+    <script type="text/javascript" src="javascripts/Chart.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+      h5 {
+        text-align: center;
+        padding: 30px;
+        color: white;
+      }
+      .content {
+        padding: 0px 10px 10px 10px;
+      }
+    </style>
+    <style>
+      input[type=range]::-webkit-slider-thumb {
+        background-color: #1565C0;
+      }
+      input[type=range]::-moz-range-thumb {
+        background-color: #1565C0;
+      }
+      input[type=range]::-ms-thumb {
+        background-color: #1565C0;
+      }
+
+      /***** These are to edit the thumb and the text inside the thumb *****/
+      input[type=range] + .thumb {
+        background-color: #1565C0;
+      }
+      input[type=range] + .thumb.active .value {
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <h5 class="blue darken-3 z-depth-2" style="margin: 0; margin-bottom: 5px;">Trägheitsmoment Messung</h5>
+      <div class="content">
+        <table>
+          <tr>
+            <td>
+              <span>Messdauer in s</span>
+            </td>
+            <td>
+              <form action="#">
+                <p class="range-field">
+                  <input type="range" id="duration" min="5" max="30" value="10" />
+                </p>
+              </form>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span>Messverzögerung in s</span>
+            </td>
+            <td>
+              <form action="#">
+                <p class="range-field">
+                  <input type="range" id="delay" min="1" max="10" value="3" />
+                </p>
+              </form>
+            </td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <td><button class="btn blue darken-3 btn-large waves-effect waves-light" style="padding-left: 42px; padding-right: 42px;" onclick="toggleMeasurement()">Messung</button></td>
+            <td>
+              <div id="measurement-preloader" class = "preloader-wrapper small">
+                <div class = "spinner-layer spinner-blue-only">
+                  <div class = "circle-clipper left">
+                    <div class = "circle"></div>
+                  </div>
+                  <div class = "gap-patch">
+                    <div class = "circle"></div>
+                  </div>
+                  <div class = "circle-clipper right">
+                    <div class = "circle"></div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <td><button class="btn blue darken-3 btn-large waves-effect waves-light" onclick="analyseData()">Auswertung</button></td>
+            <td>
+              <div class = "input-field col s6">
+                <label for = "T">&Delta;T | Schwingungsdauer</label>
+                <input id = "T" type = "text" placeholder="..." readonly />
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <a class="btn blue darken-3 btn-large waves-effect waves-light" style="width: 100%" onclick="saveMeasurements()" id="download">
+                Messdaten herunterladen<i class="material-icons right">file_download</i>
+              </a>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="content" style="padding-bottom: 20px; padding-top: 10px;">
+        <canvas id="chart"></canvas>
+      </div>
+      <div class="page-footer blue darken-3 z-depth-2">
+        <div class="container">
+          <div class="row">
+            Falls Sie Fragen zu der Bedienung dieser App haben, können Sie mir Fragen an <a href="mailto:tganzhorn@gmail.com" class="light-blue-text">tganzhorn@gmail.com</a> senden.
+          </div>
+        </div>
+        <div class="footer-copyright">
+          <div class="container">
+            © 2019 Tobias Ganzhorn
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+        let data = {
+          gyroscope: {
+            t: [],
+            x: [],
+            y: [],
+            z:[]
+          },
+          accelerometer: {
+            t: [],
+            x: [],
+            y: [],
+            z: []
+          }
+        };
+        let date = new Date();
+        let display = document.getElementById('display');
+        let enableMeasurement = false;
+
+        function initSensors() {
+          let gyroscope = new Gyroscope({frequency: 60});
+          gyroscope.onreading = () => {
+            if(enableMeasurement) {
+              data.gyroscope.x.push(gyroscope.x);
+              data.gyroscope.y.push(gyroscope.y);
+              data.gyroscope.z.push(gyroscope.z);
+              data.gyroscope.t.push(new Date().getTime() - date.getTime());
+            }
+          };
+          gyroscope.onerror = event => {
+            if (event.error.name == 'NotReadableError') {
+              alert("Gyroskop nicht verfügbar.");
+            }
+          }
+          gyroscope.start();
+
+          let accelerometer = new Accelerometer({frequency: 60});
+          accelerometer.onreading = () => {
+            if(enableMeasurement) {
+              data.accelerometer.x.push(accelerometer.x);
+              data.accelerometer.y.push(accelerometer.y);
+              data.accelerometer.z.push(accelerometer.z);
+              data.accelerometer.t.push(new Date().getTime() - date.getTime());
+            }
+          }
+          accelerometer.onerror = event => {
+            if (event.error.name == 'NotReadableError') {
+              alert("Beschleunigungssensor nicht verfügbar.");
+            }
+          }
+          accelerometer.start();
+        }
+
+        function flushData() {
+          data.gyroscope.x = [];
+          data.gyroscope.y = [];
+          data.gyroscope.z = [];
+          data.gyroscope.t = [];
+          data.accelerometer.x = [];
+          data.accelerometer.y = [];
+          data.accelerometer.z = [];
+          data.accelerometer.t = [];
+        }
+
+        function toggleMeasurement() {
+          if(!enableMeasurement) {
+            flushData();
+
+            setTimeout(function() {
+              enableMeasurement = true;
+              date = new Date();
+              saveMeasurements();
+              writeDataToChart();
+            }, document.getElementById("delay").value * 1000);
+
+            setTimeout(function() {
+              enableMeasurement = false;
+              document.getElementById("measurement-preloader").className = "preloader-wrapper small";
+              saveMeasurements();
+              writeDataToChart();
+            }, document.getElementById("duration").value * 1000 + document.getElementById("delay").value * 1000);
+
+            document.getElementById("measurement-preloader").className = "preloader-wrapper small active";
+          } else {
+            enableMeasurement = false;
+
+            document.getElementById("measurement-preloader").className = "preloader-wrapper small";
+          }
+        }
+
+        function saveMeasurements() {
+          let csv = "";
+          //csv += "Gyroskop Zeit, Gyroskop X, Gyroskop Y, Gyroskop Z, Beschleunigung Zeit, Beschleunigung X, Beschleunigung Y, Beschleunigung Z \n"
+          for(let i = 0; i < data.gyroscope.x.length; i++) {
+            csv += data.gyroscope.t[i] + ",";
+            csv += data.gyroscope.x[i] + ",";
+            csv += data.gyroscope.y[i] + ",";
+            csv += data.gyroscope.z[i] + ",";
+
+            csv += data.accelerometer.t[i] + ",";
+            csv += data.accelerometer.x[i] + ",";
+            csv += data.accelerometer.y[i] + ",";
+            csv += data.accelerometer.z[i] + "\n";
+          }
+
+          let filename = 'export.csv';
+
+          if (!csv.match(/^data:text\/csv/i)) {
+            csv = 'data:text/csv;charset=utf-8,' + csv;
+          }
+          let csvData = encodeURI(csv);
+
+          let link = document.getElementById('download');
+          link.setAttribute('href', csvData);
+          link.setAttribute('download', filename);
+        }
+
+        function analyseData() {
+          let zeroTimes = [];
+
+          let z = data.gyroscope.z;
+          let direction = Math.sign(z[0]);
+          let length = data.gyroscope.z.length;
+
+          for(let i = 1; i < length; i++) {
+            if(direction != Math.sign(z[i])) {
+              zeroTimes.push(data.gyroscope.t[i] / 1000);
+              direction *= -1;
+            }
+          }
+
+          let deltaT = 0;
+
+          for(let i = 0; i < zeroTimes.length - 1; i++) {
+            deltaT += zeroTimes[i + 1] - zeroTimes[i];
+          }
+
+          console.log(zeroTimes);
+
+          deltaT = deltaT / (zeroTimes.length - 1) * 2;
+
+          document.getElementById("T").value = Math.round(deltaT * 1000) / 1000 + " s";
+        }
+
+        function writeDataToChart() {
+          for(let i = 0; i < 6; i++) {
+            chart.data.datasets[i].data = [];
+          }
+
+          for(let i = 0; i < data.gyroscope.x.length; i++) {
+            chart.data.datasets[0].data.push({x: data.gyroscope.t[i], y:data.gyroscope.x[i]});
+            chart.data.datasets[1].data.push({x: data.gyroscope.t[i], y:data.gyroscope.y[i]});
+            chart.data.datasets[2].data.push({x: data.gyroscope.t[i], y:data.gyroscope.z[i]});
+            chart.data.datasets[3].data.push({x: data.accelerometer.t[i], y:data.accelerometer.x[i]});
+            chart.data.datasets[4].data.push({x: data.accelerometer.t[i], y:data.accelerometer.y[i]});
+            chart.data.datasets[5].data.push({x: data.accelerometer.t[i], y:data.accelerometer.z[i]});
+          }
+
+          chart.update();
+        }
+
+        initSensors();
+      </script>
+    <script>
+      let ctx = document.getElementById('chart').getContext('2d');
+
+      var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: 'Gx',
+            data: [],
+            borderColor: '#0B3954'
+          }, {
+            label: 'Gy',
+            data: [],
+            borderColor: '#087E8B'
+          }, {
+            label: 'Gz',
+            data: [],
+            borderColor: '#BFD7EA'
+          }, {
+            label: 'Ax',
+            data: [],
+            borderColor: '#E87B53'
+          }, {
+            label: 'Ay',
+            data: [],
+            borderColor: '#C81D25'
+          }, {
+            label: 'Az',
+            data: [],
+            borderColor: '#729B79'
+          }]
+        },
+        options: {
+          elements: {
+            point: {radius: 2}
+          },
+          scales: {
+            xAxes: [{
+              type: 'linear',
+              position: 'bottom'
+            }]
+          }
+        }
+      })
+    </script>
+    <script type="text/javascript" src="javascripts/materialize.min.js"></script>
+  </body>
+</html>
