@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Trägheitsmoment</title>
+
+        <link type="text/css" rel="stylesheet" href="../stylesheets/materialize.min.css"  media="screen,projection"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+        <script type="text/javascript">
+            let Measurement = {
+                init: function() {
+                    this.gyroscopeAvailable = false;
+                    this.accelerometerAvailable = false;
+
+                    this.data = {
+                        x: [],
+                        y: [],
+                        z: [],
+                        t: [],
+                    }
+
+                    this.enableMeasurement = false;
+
+                    let gyroscope = new Gyroscope({frequency: 60});
+
+                    gyroscope.onreading = () => {
+                        if(this.enableMeasurement) {
+                            this.data.x.push(gyroscope.x);
+                            this.data.y.push(gyroscope.y);
+                            this.data.z.push(gyroscope.z);
+                            this.data.t.push(gyroscope.timestamp);
+                        }
+                    }
+
+                    gyroscope.onerror = event => {
+                        if(event.error.name === 'NotReadableError') {
+                            this.gyroscopeAvailable = false;
+
+                            let accelerometer = new Accelerometer({frequency: 60});
+
+                            accelerometer.onreading = () => {
+                                if(this.enableMeasurement) {
+                                    this.data.x.push(accelerometer.x);
+                                    this.data.y.push(accelerometer.y);
+                                    this.data.z.push(accelerometer.z);
+                                    this.data.t.push(accelerometer.timestamp);
+                                }
+                            }
+
+                            accelerometer.onerror = event => {
+                                if(event.error.name === 'NotReadableError') {
+                                    this.accelerometerAvailable = false;
+                                    alert('Keine Sensoren verfügbar.')
+                                }
+                            }
+
+                            this.accelerometerAvailable = true;
+
+                            accelerometer.start();
+                        }
+                    }
+
+                    this.gyroscopeAvailable = true;
+
+                    gyroscope.start();
+                },
+                analyse: function() {
+                    let data = [];
+                    if(this.gyroscopeAvailable) {
+                        data = this.data.z;
+                    } else if(this.accelerometerAvailable) {
+                        for(let i = 0; i < this.data.x.length; i++) {
+                            data.push(this.data.x[i] + this.data.y[i]);
+                        }
+                    }
+                    let t = this.data.t;
+                    let direction = Math.sign(data[0]);
+                    let zero = [];
+
+                    for(let i = 0; i < data.length - 1; i++) {
+                        if(direction !== Math.sign(data[i + 1])) {
+                            let m = (data[i + 1] - data[i]) / (t[i + 1] - t[i]);
+                            let c = data[i] - m * t[i];
+                            zero.push((-c / m) / 1000);
+
+                            direction *= -1;
+                        }
+                    }
+
+                    let dT = 0;
+                    for(let i = 0; i < zero.length - 1; i++) {
+                        dT += zero[i + 1] - zero[i];
+                    }
+
+                    dT = dT / (zero.length - 1) * 2;
+
+                    return dT;
+                },
+                inertia: function() {
+                    let T0 = parseFloat($('#t0').val());
+                    let T1 = parseFloat($('#t1').val());
+                    let T2 = parseFloat($('#t2').val());
+
+                    let J1 = parseFloat($('#j1').val());
+
+                    if(
+                        Number.isNaN(T0) ||
+                        Number.isNaN(T1) ||
+                        Number.isNaN(T2) ||
+                        Number.isNaN(J1)
+
+                    ) {
+                        alert('Konnte Daten nicht analysieren.');
+                        return 0;
+                    }
+
+                    let J = J1 * ((T2 * T2 - T0 * T0) / (T1 * T1 - T0 * T0));
+
+                    $('#jx').val(Math.round(J * 1000000) / 1000000);
+                },
+                measure: function(index) {
+                    if(!this.accelerometerAvailable && !this.gyroscopeAvailable) {
+                        alert('Keine Sensoren verfügbar.');
+                        return 0;
+                    }
+
+                    let duration = parseInt($('#duration').val());
+                    let delay = parseInt($('#delay').val());
+
+                    $('.loader-bg').toggleClass('scale-out');
+                    $('.loader-bg').toggleClass('scale-in');
+
+                    this.flushData();
+
+                    setTimeout(function() {
+                        Measurement.enableMeasurement = true;
+                        console.log('on');
+                    }, delay * 1000);
+                    setTimeout(function() {
+                        console.log('off');
+                        Measurement.enableMeasurement = false;
+                        $('#t' + index).val(Math.round(Measurement.analyse() * 1000000) / 1000000);
+                        $('.loader-bg').toggleClass('scale-out');
+                        $('.loader-bg').toggleClass('scale-in');
+                    }, (delay + duration) * 1000);
+                },
+                flushData: function() {
+                    this.data = {
+                        x: [],
+                        y: [],
+                        z: [],
+                        t: [],
+                    }
+                }
+            }
+
+            Measurement.init();
+        </script>
+        <style>
+
+            input[type=range]::-webkit-slider-thumb {
+                background-color: #1565C0;
+            }
+            input[type=range]::-moz-range-thumb {
+                background-color: #1565C0;
+            }
+            input[type=range]::-ms-thumb {
+                background-color: #1565C0;
+            }
+
+            /***** These are to edit the thumb and the text inside the thumb *****/
+            input[type=range] + .thumb {
+                background-color: #1565C0;
+            }
+            input[type=range] + .thumb.active .value {
+                color: white;
+            }
+        </style>
+        <style>
+            .loader-bg {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(255,255,255, 0.8);
+                z-index: 999;
+            }
+
+            .loader-bg > div {
+                position: relative;
+                top: 50%;
+                width: 64px;
+                height: 64px;
+                transform: perspective(1px) translateY(-50%);
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="nav-extended blue darken-3 z-depth-2">
+            <div class="nav-wrapper">
+                <a href="#" class="brand-logo center">Trägheitsmoment</a>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="section">
+                <p>
+                    Die dieser App zugrundeliegende Formel für die Bestimmung des Trägheitsmomentes lautet:
+                </p>
+                <p>
+                    $$J_x = J_1 \cdot \frac{T_x^2-T_0^2}{T_1^2-T_0^2}$$
+                </p>
+                <p>
+                    Um das Trägheitsmoment \(J_x\) zu bestimmen müssen 3 Messungen durchgeführt werden:
+                    <ul>
+                        <li style="list-style-type: disc !important; margin-left: 10px;">
+                            <p>
+                                \(T_0\): wird nur mit dem Smartphone auf dem Drehteller durchgeführt.
+                            </p>
+                        </li>
+                        <li style="list-style-type: disc !important; margin-left: 10px;">
+                            <p>
+                                \(T_1\): wiederum mit einem Objekt dessen Trägheitsmoment um die gewünschte Achse bekannt ist.
+                            </p>
+                        </li>
+                        <li style="list-style-type: disc !important; margin-left: 10px;">
+                            <p>
+                                \(T_x\): wird mit einem beliebigen Körper dessen Trägheitsmoment bestimmt werden soll durchgeführt.
+                            </p>
+                        </li>
+                    </ul>
+                </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <p>
+                    Hier können Sie die Messdauer und Messverzögerung einstellen.
+                </p>
+                <form action="#">
+                    <p class="range-field">
+                        <span>Messdauer in Sekunden</span>
+                        <input type="range" id="duration" min="10" max="120" value="30"/>
+                    </p>
+                    <p class="range-field">
+                        <span>Messverzögerung in Sekunden</span>
+                        <input type="range" id="delay" min="0" max="10" value="2" />
+                    </p>
+                </form>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <p>
+                    <span>Führen Sie nacheinander alle 3 Messungen durch, beachten Sie dabei die erwähnten Richtlinien. Die Schwingungsdauer wird in Sekunde (\(s\)) angegeben</span>
+                </p>
+                <div class="row valign-wrapper">
+                    <a class="btn waves-effect waves-light col s6 blue darken-3" onclick="Measurement.measure(0)">Messung \(T_0\)</a>
+                    <div class="input-field inline col s6">
+                        <input id="t0" type="text" placeholder="...">
+                    </div>
+                </div>
+                <div class="row valign-wrapper">
+                    <a class="btn waves-effect waves-light col s6 blue darken-3" onclick="Measurement.measure(1)">Messung \(T_1\)</a>
+                    <div class="input-field inline col s6">
+                        <input id="t1" type="text" placeholder="...">
+                    </div>
+                </div>
+                <div class="row valign-wrapper">
+                    <a class="btn waves-effect waves-light col s6 blue darken-3" onclick="Measurement.measure(2)">Messung \(T_x\)</a>
+                    <div class="input-field inline col s6">
+                        <input id="t2" type="text" placeholder="...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <p>
+                    <span>Hier können Sie das Trägheitsmoment nach erfolgter Messung berechnen.</span>
+                </p>
+                <div class="row valign-wrapper">
+                    <span class="col s6">
+                        <p>
+                            Hier \(J_1\) eintragen:
+                        </p>
+                    </span>
+                    <div class="input-field inline col s6">
+                        <input id="j1" type="text">
+                        <label for="j1">\(J_1\) in \(kg \cdot m^2\)</label>
+                    </div>
+                </div>
+                <div class="row valign-wrapper">
+                    <a class="btn waves-effect waves-light col s6 blue darken-3" onclick="Measurement.inertia()">Brechne \(J_x\)</a>
+                    <div class="input-field inline col s6">
+                        <input id="jx" type="text" readonly placeholder="...">
+                        <label for="jx">\(J_x\) in \(kg \cdot m^2\)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-footer blue darken-3 z-depth-2">
+            <div class="container">
+                <p>
+                    Falls Sie Fragen zu der Bedienung dieser App haben, können Sie mir Fragen an <a href="mailto:tganzhorn@gmail.com" class="light-blue-text">tganzhorn@gmail.com</a> senden.
+                </p>
+            </div>
+            <div class="footer-copyright">
+                <div class="container">
+                    © 2019 Tobias Ganzhorn
+                </div>
+            </div>
+        </div>
+
+        <div class="loader-bg scale-transition scale-out">
+            <div>
+                <div class="preloader-wrapper big active" style="margin: 0 auto;">
+                    <div class="spinner-layer spinner-blue-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div><div class="gap-patch">
+                        <div class="circle"></div>
+                    </div><div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="../javascripts/materialize.min.js"></script>
+    </body>
+</html>
