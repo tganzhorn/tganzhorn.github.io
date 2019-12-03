@@ -1,0 +1,2 @@
+(this.webpackJsonpmockup=this.webpackJsonpmockup||[]).push([[16],{235:function(t,e,u){"use strict";u.r(e);u(0);e.default=function(){return"Hier steht die Suche!"}}}]);
+//# sourceMappingURL=16.f3ab1aae.chunk.js.map

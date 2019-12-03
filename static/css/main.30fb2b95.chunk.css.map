@@ -1,0 +1,1 @@
+{"version":3,"sources":["index.css"],"names":[],"mappings":"AAAA,EACI,6BACJ,CAEA,UACI,QAAS,CACT,SACJ","file":"main.30fb2b95.chunk.css","sourcesContent":["* {\r\n    font-family: 'Roboto', sans-serif;\r\n}\r\n\r\nhtml, body {\r\n    margin: 0;\r\n    padding: 0;\r\n}"]}

@@ -1,0 +1,1 @@
+{"version":3,"sources":["components/Routes/Protected/Notes.js"],"names":["Notes"],"mappings":"mGAAA,YAMeA,UAJD,WACV,MAAO","file":"static/js/15.b2035a21.chunk.js","sourcesContent":["import React from 'react';\r\n\r\nconst Notes = () => {\r\n    return 'Hier stehen deine Notizen!';\r\n};\r\n\r\nexport default Notes;"],"sourceRoot":""}
