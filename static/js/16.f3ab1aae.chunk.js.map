@@ -1,1 +1,0 @@
-{"version":3,"sources":["components/Routes/Protected/Search.js"],"names":["Search"],"mappings":"mGAAA,YAMeA,UAJA,WACX,MAAO","file":"static/js/16.f3ab1aae.chunk.js","sourcesContent":["import React from 'react';\r\n\r\nconst Search = () => {\r\n    return 'Hier steht die Suche!';\r\n};\r\n\r\nexport default Search;"],"sourceRoot":""}

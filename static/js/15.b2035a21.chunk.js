@@ -1,2 +1,0 @@
-(this.webpackJsonpmockup=this.webpackJsonpmockup||[]).push([[15],{233:function(e,n,t){"use strict";t.r(n);t(0);n.default=function(){return"Hier stehen deine Notizen!"}}}]);
-//# sourceMappingURL=15.b2035a21.chunk.js.map

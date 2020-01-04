@@ -1,1 +1,0 @@
-{"version":3,"sources":["components/Routes/Protected/Forum.js"],"names":["Forum"],"mappings":"mGAAA,YAMeA,UAJD,WACV,MAAO","file":"static/js/14.91fd06d0.chunk.js","sourcesContent":["import React from 'react';\r\n\r\nconst Forum = () => {\r\n    return 'Hier steht das Forum!';\r\n};\r\n\r\nexport default Forum;"],"sourceRoot":""}

@@ -1,1 +1,0 @@
-{"version":3,"sources":["components/Routes/Protected/Feedback.js"],"names":["Feedback"],"mappings":"mGAAA,YAMeA,UAJE,WACb,MAAO","file":"static/js/13.18610b97.chunk.js","sourcesContent":["import React from 'react';\r\n\r\nconst Feedback = () => {\r\n    return 'Hier steht das Feedback!';\r\n};\r\n\r\nexport default Feedback;"],"sourceRoot":""}

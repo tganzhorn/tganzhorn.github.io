@@ -1,1 +1,0 @@
-{"version":3,"sources":["components/Routes/Protected/Settings.js"],"names":["Settings"],"mappings":"mGAAA,YAMeA,UAJE,WACb,MAAO","file":"static/js/17.af8d718c.chunk.js","sourcesContent":["import React from 'react';\r\n\r\nconst Settings = () => {\r\n    return 'Hier stehen deine Einstellungen!';\r\n};\r\n\r\nexport default Settings;"],"sourceRoot":""}

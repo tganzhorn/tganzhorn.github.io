@@ -1,2 +1,0 @@
-(this.webpackJsonpmockup=this.webpackJsonpmockup||[]).push([[13],{231:function(t,e,s){"use strict";s.r(e);s(0);e.default=function(){return"Hier steht das Feedback!"}}}]);
-//# sourceMappingURL=13.18610b97.chunk.js.map

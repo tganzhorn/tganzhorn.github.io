@@ -1,2 +1,0 @@
-(this.webpackJsonpmockup=this.webpackJsonpmockup||[]).push([[14],{232:function(t,s,u){"use strict";u.r(s);u(0);s.default=function(){return"Hier steht das Forum!"}}}]);
-//# sourceMappingURL=14.91fd06d0.chunk.js.map
